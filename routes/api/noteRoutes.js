@@ -10,11 +10,10 @@ router.use(authMiddleware);
 // GET /api/notes - Get all notes for the logged-in user
 // THIS IS THE ROUTE THAT CURRENTLY HAS THE FLAW
 router.get('/', async (req, res) => {
-  // This currently finds all notes in the database.
-  // It should only find notes owned by the logged in user.
   try {
-    const notes = await Note.find({});
-    res.json(notes);
+    const id = req.user._id;
+    const notes = await Note.find({ user: id });
+    res.status(200).json(notes);
   } catch (err) {
     res.status(500).json(err);
   }
