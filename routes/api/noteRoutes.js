@@ -7,8 +7,6 @@ const router = e.Router();
 // Apply authMiddleware to all routes in this file
 router.use(authMiddleware);
  
-// GET /api/notes - Get all notes for the logged-in user
-// THIS IS THE ROUTE THAT CURRENTLY HAS THE FLAW
 router.get('/', async (req, res) => {
   try {
     const id = req.user._id;
@@ -19,7 +17,6 @@ router.get('/', async (req, res) => {
   }
 });
  
-// POST /api/notes - Create a new note
 router.post('/', async (req, res) => {
   try {
     const note = await Note.create({
@@ -36,7 +33,13 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     // This needs an authorization check
-    const note = await Note.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const findNote = await Note.findById(req.params.id);
+
+    if (findNote.user != req.user._id) {
+      return res.status(403).json({ message: 'User is not authorized to update this note.' });
+    }
+
+    const note = await Note.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     if (!note) {
       return res.status(404).json({ message: 'No note found with this id!' });
     }
